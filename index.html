@@ -1,80 +1,382 @@
 <!DOCTYPE html>
+<!--
+  ЕДИНЫЙ ЛЕНДИНГ «Подсказка от Лилы → Первый шаг» (всё на одном домене).
+  План: draft/plan_podskazka_landing.md (§5 механика, §9 слияние + механизм).
+  Решения (2026-06-14): механизм B (только мессенджер-воронка), каналы Telegram + MAX,
+  подсказка-механика = входная зацепка единого лендинга.
+
+  Поток: s0 старт → sR ритуал → s1 подсказка(карта) → s2 оффер «Первый шаг» → CTA в бота.
+  Оплата НЕ на лендинге — внутри бота (прогрев + снятие блоков + оплата).
+
+  Усиления ресёрча 2026 / раунд 2 (план §11): применены
+    U3  — микро-пруф выше первого экрана (hero оффера: регалия/числа);
+    U8  — микрострока-«прозрачность» на reveal (.card-why: почему это про вас);
+    U9  — prefers-reduced-motion (гашение анимаций + короче пауза вытягивания);
+    U10 — порядок месседжа в hero: релевантность → компетентность → формат;
+    U6  — честный обратный отсчёт к 4 июля (появляется автоматически только ≤7 дней до встречи).
+    U5  — снятие риска словами (FAQ «а если не подойдёт»): без обещания возврата, честно (решение 2026-06-14).
+
+  Ссылки на ботов (вставлены 2026-06-14): TG https://s.salebot.pro/psi-reg_lila_1 · MAX https://s.salebot.pro/psi-reg_lila_20
+
+  ⚠️ ЕЩЁ ПОЛОЖИТЬ:
+    galina.jpg, 68__Космическое_сознание.png, карты N__*.png — лежат рядом на домене.
+    assets/otziv-1.jpg / otziv-2.jpg / otziv-3.jpg — скрины отзывов для карусели (Ирина / Татьяна / Telegram).
+
+  Отзывы (блок «Отзывы»): карусель из 3 реальных скринов, отобранных 2026-06-14
+    (эзотерические — Евгения С. — исключены, барьер №1).
+    ⚠️ ПД: для публикации скрина с именем/лицом нужно согласие автора (иначе обрезать фамилию/аватар).
+-->
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Подсказка от Лилы</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<title>Первый шаг — Галина Васильева</title>
+<!-- Шрифты бренда: Georgia (заголовки) + Arial (текст) — системные, без загрузки -->
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#f7f4ef;--card:#fff;--text:#1a1008;--muted:#4a4038;--accent:#b8874a;--border:rgba(184,135,74,.25);--shadow:rgba(42,36,32,.12)}
-body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 4rem;-webkit-text-size-adjust:100%}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#F4F0E6;--card:#FAF8F2;--text:#2E4A35;--muted:#8A8378;--accent:#4A7050;--sage:#8FAF8A;--sage-light:#D4E4CF;--sand:#D4C9B0;--border:#D4C9B0;--shadow:rgba(74,80,60,.12)}
+html{background:var(--bg)}
+body{font-family:Arial,sans-serif;font-weight:300;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 4rem;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
 .wrap{max-width:480px;margin:0 auto;padding:0 1.25rem}
 .screen{display:none}
 .screen.on{display:block;animation:fi .35s ease}
 @keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* СТАРТОВЫЙ ЭКРАН */
-.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);text-align:center;padding-top:2rem;margin-bottom:.6rem}
-.start-subtitle{font-size:13px;color:var(--muted);line-height:1.7;text-align:center;margin-bottom:1rem;}
-.start-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;color:var(--text);line-height:1.3;text-align:center;margin-bottom:.75rem}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);text-align:center;padding-top:2rem;margin-bottom:.6rem;line-height:1.6}
+.eyebrow span{display:block;color:var(--muted);letter-spacing:.18em}
+.start-title{font-family:Georgia,serif;font-size:34px;font-weight:600;color:var(--text);line-height:1.3;text-align:center;margin-bottom:.75rem}
 .start-desc{font-size:16px;color:var(--text);line-height:1.8;text-align:center;margin-bottom:2rem;font-weight:400}
+.start-img{width:100%;border-radius:16px;display:block;margin-top:1.5rem;margin-bottom:1.5rem;box-shadow:0 8px 32px var(--shadow)}
+
+/* ЭКРАН РИТУАЛА */
+.ritual-eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);text-align:center;padding-top:2.5rem;margin-bottom:.75rem}
+.ritual-title{font-family:Georgia,serif;font-size:28px;font-weight:600;color:var(--text);line-height:1.3;text-align:center;margin-bottom:1.25rem}
+.ritual-text{font-size:16px;color:var(--text);line-height:1.85;text-align:center;margin-bottom:1.5rem;font-weight:400}
+.ritual-note{font-size:13px;color:var(--muted);line-height:1.75;text-align:center;margin-bottom:2rem;padding:1rem 1.25rem;background:var(--card);border:1px solid var(--border);border-radius:12px}
 
 /* ЭКРАН КАРТОЧКИ */
-.card-intro{font-size:14px;color:var(--text);line-height:1.7;text-align:center;margin-bottom:1.25rem;padding-top:1.5rem;}
+.card-intro{font-size:14px;color:var(--text);line-height:1.7;text-align:center;margin-bottom:1.25rem;padding-top:1.5rem}
 .card-img{width:100%;border-radius:16px;display:block;margin-bottom:1.25rem;box-shadow:0 8px 32px var(--shadow)}
 .card-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.75rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 6px 24px var(--shadow)}
 .card-num{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem;opacity:.75}
-.card-name{font-family:'Cormorant Garamond',serif;font-size:30px;font-style:italic;font-weight:600;color:var(--text);margin-bottom:1rem}
+.card-name{font-family:Georgia,serif;font-size:30px;font-style:italic;font-weight:600;color:var(--text);margin-bottom:1rem}
 .card-text{font-size:16px;color:var(--text);line-height:1.8;margin-bottom:1.25rem;font-weight:400}
-.card-question{font-size:13px;color:var(--text);line-height:1.75;font-style:italic;text-align:center;margin-bottom:1.25rem;padding:1rem 1.25rem;background:var(--card);border:1px solid var(--border);border-radius:12px}
 
-.btn{display:block;width:100%;padding:.9rem 1.5rem;background:var(--accent);border:1px solid var(--accent);border-radius:40px;font-family:'Jost',sans-serif;font-size:12px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .22s;-webkit-appearance:none;touch-action:manipulation}
-.btn:hover,.btn:active{background:#a07640;border-color:#a07640;color:#fff}
-.start-img{width:100%;border-radius:16px;display:block;margin-top:1.5rem;margin-bottom:1.5rem;box-shadow:0 8px 32px var(--shadow)}
-.footer{text-align:center;margin-top:2rem;font-size:11px;color:var(--muted)}
-.footer a{color:var(--accent);text-decoration:none}
+/* АНИМАЦИЯ ВЫТЯГИВАНИЯ */
+.draw-stage{text-align:center;padding:2.5rem 0 1.5rem}
+.card-back{width:128px;height:188px;margin:0 auto 1.25rem;border-radius:16px;background:linear-gradient(160deg,#A7C2A1,#6E8F68);border:1px solid var(--accent);box-shadow:0 10px 30px var(--shadow);position:relative;animation:pulse 1.05s ease-in-out infinite}
+.card-back::after{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.35);border-radius:10px}
+@keyframes pulse{0%,100%{transform:scale(1) rotate(-1.5deg);opacity:.9}50%{transform:scale(1.05) rotate(1.5deg);opacity:1}}
+.draw-label{font-family:Georgia,serif;font-style:italic;font-size:20px;color:var(--muted)}
+#s1 .reveal-block{display:none}
+#s1.revealed .reveal-block{display:block;animation:fi .5s ease}
+#s1 .draw-stage{display:none}
+#s1.drawing .draw-stage{display:block}
+
+.btn{display:block;width:100%;padding:.9rem 1.5rem;background:var(--accent);border:1px solid var(--accent);border-radius:40px;font-family:Arial,sans-serif;font-size:12px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .22s;-webkit-appearance:none;touch-action:manipulation;text-align:center;text-decoration:none}
+.btn:hover,.btn:active{background:#3d5d43;border-color:#3d5d43;color:#fff}
+.btn-text{display:block;width:100%;background:none;border:none;margin-top:1rem;font-family:Arial,sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:.5rem}
+
+.bridge{font-size:15px;color:var(--text);line-height:1.8;text-align:center;margin-bottom:1rem}
+.bridge b{font-weight:400;font-style:italic;color:var(--accent)}
+
+/* ===== ЭКРАН ОФФЕРА «ПЕРВЫЙ ШАГ» (s2) ===== */
+.offer-eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);text-align:center;padding-top:2rem;margin-bottom:.75rem;font-weight:400}
+.offer-h1{font-family:Georgia,serif;font-weight:600;font-size:46px;line-height:1.15;color:var(--text);text-align:center;margin-bottom:.6rem}
+.offer-subtitle{font-size:17px;font-weight:400;color:var(--text);line-height:1.6;text-align:center;margin-bottom:.4rem}
+.format-tag{font-size:13px;font-weight:400;color:var(--accent);text-align:center;letter-spacing:.04em;margin-bottom:2rem}
+.transform{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:2rem;box-shadow:0 6px 24px var(--shadow)}
+.transform-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:.35rem;font-weight:400}
+.transform-from{font-family:Georgia,serif;font-style:italic;font-size:19px;font-weight:400;color:var(--muted);line-height:1.5;padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.transform-to{font-family:Georgia,serif;font-size:22px;font-weight:600;color:var(--text);line-height:1.4}
+.section-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;font-weight:400}
+.pains{display:flex;flex-direction:column;gap:12px;margin-bottom:2rem}
+.pain-item{display:flex;align-items:flex-start;gap:12px;font-size:16px;font-weight:400;color:var(--text);line-height:1.55}
+.pain-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:9px}
+.divider{border:none;border-top:1px solid var(--border);margin:2rem 0}
+.steps{display:flex;flex-direction:column;margin-bottom:2rem}
+.step{display:flex;gap:16px;padding:1.25rem 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-num{width:32px;height:32px;border-radius:50%;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:500;color:var(--accent);margin-top:2px}
+.step-title{font-family:Georgia,serif;font-size:22px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.25}
+.step-desc{font-size:15px;font-weight:400;color:var(--muted);line-height:1.7}
+.format-block{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 4px 16px var(--shadow)}
+.format-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:1rem}
+.format-row:last-child{margin-bottom:0}
+.format-icon{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;color:var(--accent)}
+.format-title{font-size:16px;font-weight:500;color:var(--text);margin-bottom:3px}
+.format-desc{font-size:14px;font-weight:400;color:var(--muted);line-height:1.6}
+.basis{border-left:2px solid var(--accent);padding:1rem 1.25rem;margin-bottom:2rem}
+.basis p{font-size:15px;font-weight:400;color:var(--muted);line-height:1.8}
+.basis p+p{margin-top:.5rem}
+.basis b{color:var(--text);font-weight:500}
+.about{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:2rem;box-shadow:0 6px 24px var(--shadow)}
+.about-photo{width:100%;height:340px;object-fit:cover;object-position:center top;display:block}
+.about-info{padding:1.25rem 1.5rem 1.5rem}
+.about-name{font-family:Georgia,serif;font-size:26px;font-weight:600;color:var(--text);margin-bottom:5px}
+.about-desc{font-size:14px;font-weight:400;color:var(--muted);line-height:1.6}
+/* FAQ скептика */
+.faq{margin-bottom:2rem}
+.faq-item{padding:1.1rem 0;border-bottom:1px solid var(--border)}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:16px;font-weight:500;color:var(--text);line-height:1.4;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-q::-webkit-details-marker{display:none}
+.faq-q::after{content:"+";font-size:24px;font-weight:300;color:var(--accent);flex-shrink:0;line-height:1;transition:transform .22s}
+.faq-item[open] .faq-q::after{transform:rotate(45deg)}
+.faq-a{font-size:14px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:.7rem}
+/* Отзыв */
+.review{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:2rem;box-shadow:0 4px 16px var(--shadow)}
+.review-text{font-family:Georgia,serif;font-style:italic;font-size:18px;font-weight:400;color:var(--text);line-height:1.6;margin-bottom:.75rem}
+.review-author{font-size:13px;color:var(--accent);letter-spacing:.04em}
+/* Карусель отзывов-скринов */
+.reviews-carousel{margin-bottom:2rem}
+.reviews-track{position:relative;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.reviews-track::-webkit-scrollbar{display:none}
+.review-slide{flex:0 0 100%;scroll-snap-align:center}
+.review-slide img{width:100%;border-radius:16px;display:block;box-shadow:0 6px 24px var(--shadow);border:1px solid var(--border)}
+.reviews-dots{display:flex;justify-content:center;gap:8px;margin-top:1rem}
+.reviews-dots button{width:8px;height:8px;border-radius:50%;border:none;background:var(--border);padding:0;cursor:pointer;transition:background .2s;-webkit-appearance:none}
+.reviews-dots button.active{background:var(--accent)}
+.reviews-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:.6rem;letter-spacing:.03em}
+/* Цена + регистрация */
+.price-block{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.75rem 1.5rem;text-align:center;box-shadow:0 6px 24px var(--shadow);margin-bottom:1rem}
+.price-date{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.75rem;font-weight:400}
+.price-amount{font-family:Georgia,serif;font-size:44px;font-weight:600;color:var(--text);margin-bottom:.25rem;line-height:1}
+.price-amount span{font-family:Arial,sans-serif;font-size:14px;font-weight:400;color:var(--muted)}
+.price-format{font-size:13px;font-weight:400;color:var(--muted);margin-bottom:1.5rem}
+.cta{display:block;width:100%;padding:1rem 1.5rem;background:var(--accent);border:1px solid var(--accent);border-radius:40px;font-family:Arial,sans-serif;font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#fff;cursor:pointer;text-align:center;text-decoration:none;transition:all .22s}
+.cta:hover,.cta:active{background:#3d5d43;border-color:#3d5d43;color:#fff}
+.cta-second{display:block;width:100%;padding:1rem 1.5rem;background:transparent;border:1px solid var(--accent);border-radius:40px;font-family:Arial,sans-serif;font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);cursor:pointer;text-align:center;text-decoration:none;transition:all .22s;margin-top:.75rem}
+.cta-second:hover,.cta-second:active{background:var(--accent);color:#fff}
+.cta-note{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin-top:1rem}
+
+/* честный обратный отсчёт — только в финальную неделю (U6) */
+.countdown{font-size:13px;font-weight:500;letter-spacing:.03em;color:var(--accent);margin-bottom:1rem;line-height:1.5}
+/* hero micro-proof выше первого экрана (U3) */
+.hero-proof{font-size:13px;font-weight:400;color:var(--muted);text-align:center;letter-spacing:.02em;line-height:1.5;margin:.15rem 0 .6rem}
+.hero-proof b{color:var(--accent);font-weight:500}
+/* микрострока-«прозрачность» на reveal (U8) */
+.card-why{font-size:13px;color:var(--muted);line-height:1.7;text-align:center;margin-bottom:1.25rem;padding:0 .5rem}
+.card-why b{color:var(--text);font-weight:500}
+
 @media(max-width:400px){
-  .start-subtitle{font-size:13px;color:var(--muted);line-height:1.7;text-align:center;margin-bottom:1rem;}
-.start-title{font-size:24px}
+  .start-title{font-size:24px}
+  .ritual-title{font-size:24px}
   .card-name{font-size:22px}
+  .offer-h1{font-size:36px}
 }
 
-.bridge {
-  font-size: 15px;
-  color: var(--text);
-  line-height: 1.8;
-  text-align: center;
-  margin-bottom: 1rem;
+/* accessibility: уважать prefers-reduced-motion (U9) — гасим анимации/пульсацию на слабых телефонах */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* ===== «Заземление» — фирменные акценты по брендбуку ===== */
+.section-label{display:flex;align-items:center;gap:8px}
+.section-label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sage);flex-shrink:0}
+.hero-proof{display:table;margin:.45rem auto .7rem;background:var(--sage-light);padding:7px 16px;border-radius:30px;color:var(--text)}
+.hero-proof b{color:var(--text)}
+.price-block{position:relative;overflow:hidden}
+.price-block::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--sage)}
+.price-date{display:table;margin:0 auto .9rem;background:var(--sage-light);color:var(--text);padding:6px 15px;border-radius:20px}
+.cta-second{border-color:var(--sage)}
+.ritual-note{background:var(--sage-light);border-color:transparent}
+.basis{background:var(--sage-light);border-radius:0 12px 12px 0;padding:1.25rem}
+.format-icon{background:var(--sage-light);border-color:transparent}
+.step-num{background:var(--sage-light);border-color:transparent}
 </style>
 </head>
 <body>
 
-<!-- СТАРТОВЫЙ ЭКРАН -->
+<!-- ===== ЭКРАН 0: СТАРТ (подсказка-зацепка) ===== -->
 <div id="s0" class="screen on">
   <div class="wrap">
-    <p class="eyebrow">Галина Васильева · Игровая терапия Лила</p>
+    <p class="eyebrow">Галина Васильева, клинический психолог<span>Игра Лила · психологический подход</span></p>
     <h1 class="start-title">Всё понимаете, но не делаете?</h1>
     <p class="start-desc">Одна подсказка может изменить угол зрения.</p>
     <img src="68__Космическое_сознание.png" alt="Лила" class="start-img">
-    <button class="btn" onclick="showCard()">Получить подсказку →</button>
+    <button class="btn" onclick="goToRitual()">Получить подсказку →</button>
   </div>
 </div>
 
-<!-- ЭКРАН КАРТОЧКИ -->
+<!-- ===== ЭКРАН R: РИТУАЛ ===== -->
+<div id="sR" class="screen">
+  <div class="wrap">
+    <p class="ritual-eyebrow">Один момент перед подсказкой</p>
+    <h2 class="ritual-title">Сначала — ваш вопрос</h2>
+    <p class="ritual-text">Сформулируйте про себя одну ситуацию, которая сейчас не двигается, — ту самую, где вы всё понимаете, но не делаете. Держите её в голове, пока тянете подсказку.</p>
+    <p class="ritual-note">Это не гадание и не послания. Лила — проективный метод: способ обойти рациональные защиты и увидеть то, что влияет на ваши решения, но остаётся вне поля зрения.</p>
+    <button class="btn" onclick="drawCard()">Тянуть подсказку →</button>
+    <button class="btn-text" onclick="backToStart()">← Назад</button>
+  </div>
+</div>
+
+<!-- ===== ЭКРАН 1: КАРТОЧКА-ПОДСКАЗКА ===== -->
 <div id="s1" class="screen">
   <div class="wrap">
-    <p class="card-intro">Подсказка от Лилы — трансформационной игры в психологическом подходе Галины Васильевой.</p>
-    <img id="card-img" src="" alt="" class="card-img" style="display:none">
-    <div class="card-box">
-      <p class="card-num" id="card-num"></p>
-      <p class="card-name" id="card-name"></p>
-      <p class="card-text" id="card-text"></p>
+    <div class="draw-stage">
+      <div class="card-back"></div>
+      <p class="draw-label">Тяну вашу подсказку…</p>
     </div>
-    <p class="bridge">Подсказка показывает направление. Но чтобы сдвинуться — нужно увидеть, что именно удерживает вас от движения.</p>
-    <p class="bridge">Приходите на онлайн-встречу «Первый шаг» — разберём вашу ситуацию вместе.</p>
-    <button class="btn" onclick="window.location.href='https://vasilevagalinapsy.github.io/lila-shag/'">Хочу найти свой первый шаг →</button>
+    <div class="reveal-block">
+      <p class="card-intro">Ваша подсказка от Лилы — для вопроса, который вы держали в голове.</p>
+      <img id="card-img" alt="" class="card-img" style="display:none">
+      <div class="card-box">
+        <p class="card-num" id="card-num"></p>
+        <p class="card-name" id="card-name"></p>
+        <p class="card-text" id="card-text"></p>
+      </div>
+      <p class="card-why"><b>Почему это про вас:</b> подсказка — не случайное послание, а зеркало запроса, который вы держали в голове.</p>
+      <p class="bridge">Это про ваш первый шаг — отсюда, с клетки «<b id="bridge-name"></b>».</p>
+      <p class="bridge">Чтобы сдвинуться, важно увидеть, что именно вас удерживает. На онлайн-встрече «Первый шаг» посмотрим на вашу слепую зону вместе.</p>
+      <button class="btn" onclick="goToOffer()">Узнать про встречу «Первый шаг» →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ЭКРАН 2: ОФФЕР «ПЕРВЫЙ ШАГ» ===== -->
+<div id="s2" class="screen">
+  <div class="wrap">
+
+    <p class="offer-eyebrow">Онлайн-встреча с психологом в игровом формате</p>
+    <h1 class="offer-h1">Первый шаг</h1>
+    <p class="offer-subtitle">Для тех, кто застрял — и хочет наконец сдвинуться</p>
+    <p class="hero-proof">Ведёт <b>клинический психолог</b> · 11 лет практики · 5000+ сессий</p>
+    <p class="format-tag">Группа · до 1,5 часа · Zoom</p>
+
+    <div class="transform">
+      <p class="transform-label">От</p>
+      <p class="transform-from">«Всё понимаю — и всё равно стою на месте»</p>
+      <p class="transform-label">К</p>
+      <p class="transform-to">«Теперь вижу, почему. И что с этим делать»</p>
+    </div>
+
+    <p class="section-label">Это для вас, если</p>
+    <div class="pains">
+      <div class="pain-item"><div class="pain-dot"></div><span>Всё понимаете — но ничего не меняется</span></div>
+      <div class="pain-item"><div class="pain-dot"></div><span>Ходите по кругу и не можете найти выход</span></div>
+      <div class="pain-item"><div class="pain-dot"></div><span>Знаете, что надо делать — и всё равно не делаете</span></div>
+    </div>
+
+    <hr class="divider">
+
+    <p class="section-label">Что будет</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <p class="step-title">Сформулируете настоящий вопрос</p>
+          <p class="step-desc">Тот, который действительно болит. Не тот, что «нужно решить» — а тот, что не отпускает.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <p class="step-title">Увидите, что удерживает на месте</p>
+          <p class="step-desc">Страх, вина, привычный сценарий. Назвать это — значит перестать быть в плену у невидимого.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <p class="step-title">Найдёте следующий шаг</p>
+          <p class="step-desc">Конкретный и ваш. Не универсальный совет — а именно то, что можете сделать вы, исходя из вашей ситуации.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="price-block">
+      <p class="price-date">4 июля 2026 · 12:00 по Мск</p>
+      <p class="price-amount">490 ₽ <span>за участие</span></p>
+      <p class="price-format">онлайн · до 1,5 часа · Zoom</p>
+      <a href="https://s.salebot.pro/psi-reg_lila_1" class="cta">Записаться в Telegram →</a>
+      <a href="https://s.salebot.pro/psi-reg_lila_20" class="cta-second">Записаться в MAX</a>
+      <p class="cta-note">Регистрация занимает минуту. В переписке отвечу на вопросы, помогу с оплатой и пришлю ссылку на встречу.</p>
+    </div>
+
+    <p class="section-label">Как проходит</p>
+    <div class="format-block">
+      <div class="format-row">
+        <div class="format-icon">⟳</div>
+        <div>
+          <p class="format-title">Групповой формат — безопасно</p>
+          <p class="format-desc">Все работают со своим запросом. Вас не «вскрывают» при всех — можно просто наблюдать и включиться, когда будете готовы.</p>
+        </div>
+      </div>
+      <div class="format-row">
+        <div class="format-icon">◷</div>
+        <div>
+          <p class="format-title">До 1,5 часа · Zoom</p>
+          <p class="format-desc">Из дома, с камерой или без. Ссылку и детали пришлю в переписке после записи.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-label">Это не эзотерика</p>
+    <div class="basis">
+      <p>В основе — <b>авторский психологический формат</b> на базе игры Лила. Это <b>не гадание, не мистика и не «послания вселенной»</b>. Игра здесь — проективный инструмент: способ обойти рациональные защиты и увидеть то, что обычно остаётся в слепой зоне.</p>
+      <p>За 11 лет практики я адаптировала этот инструмент для работы с жизненными тупиками.</p>
+    </div>
+
+    <p class="section-label">Кто ведёт</p>
+    <div class="about">
+      <img class="about-photo" src="galina.jpg" alt="Галина Васильева">
+      <div class="about-info">
+        <p class="about-name">Галина Васильева</p>
+        <p class="about-desc">Клинический психолог · 11 лет практики · 5000+ сессий · автор двух книг</p>
+      </div>
+    </div>
+
+    <p class="section-label">Частые вопросы</p>
+    <div class="faq">
+      <details class="faq-item">
+        <summary class="faq-q">Это не гадание на кубиках?</summary>
+        <p class="faq-a">Нет. Кубик и поле — лишь способ задать структуру разговору с собой. Работаем с реальной ситуацией методами психологии, а не «предсказаниями».</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">Меня будут разбирать при всех?</summary>
+        <p class="faq-a">Нет. Каждый работает со своим запросом в своём темпе. Можно прийти и сначала просто посмотреть, как это устроено — без обязательства открываться.</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">А вдруг это очевидные советы?</summary>
+        <p class="faq-a">Игра не даёт «совет» — она показывает то, что вы не видите изнутри ситуации. Ведёт клинический психолог, а не коуч успеха: работаем с вашим конкретным случаем.</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">А если мне не подойдёт или не сработает?</summary>
+        <p class="faq-a">490 ₽ — символическая цена за то, чтобы попробовать без большого риска. Можно прийти и сначала просто наблюдать, включиться в своём темпе — без обязательства открываться перед группой.</p>
+      </details>
+    </div>
+
+    <!-- Реальные отзывы-скрины каруселью (отобраны 2026-06-14). Эзотерические (Евгения С.) исключены — барьер №1.
+         ⚠️ ФАЙЛЫ ПОЛОЖИТЬ в assets/ (рядом с index.html):
+            assets/otziv-1.jpg — Ирина Ч.
+            assets/otziv-2.jpg — Татьяна П.
+            assets/otziv-3.jpg — Telegram-отзыв
+         ⚠️ ПД: для публикации скрина с именем/лицом нужно согласие автора (иначе обрезать фамилию/аватар). -->
+    <p class="section-label">Отзывы</p>
+    <div class="reviews-carousel">
+      <div class="reviews-track" id="reviewsTrack">
+        <div class="review-slide"><img src="assets/otziv-3.jpg" alt="Отзыв участницы в Telegram" loading="lazy"></div>
+        <div class="review-slide"><img src="assets/otziv-1.jpg" alt="Отзыв: Ирина Ч." loading="lazy"></div>
+        <div class="review-slide"><img src="assets/otziv-2.jpg" alt="Отзыв: Татьяна П." loading="lazy"></div>
+      </div>
+      <div class="reviews-dots" id="reviewsDots"></div>
+      <p class="reviews-hint">← листайте отзывы →</p>
+    </div>
+
+    <div class="price-block">
+      <p class="price-date">4 июля 2026 · 12:00 по Мск</p>
+      <p class="price-amount">490 ₽ <span>за участие</span></p>
+      <p class="price-format">онлайн · до 1,5 часа · Zoom</p>
+      <p class="countdown" id="countdown" style="display:none"></p>
+      <a href="https://s.salebot.pro/psi-reg_lila_1" class="cta">Записаться в Telegram →</a>
+      <a href="https://s.salebot.pro/psi-reg_lila_20" class="cta-second">Записаться в MAX</a>
+      <p class="cta-note">Регистрация занимает минуту. В переписке отвечу на вопросы, помогу с оплатой и пришлю ссылку на встречу.</p>
+    </div>
+
   </div>
 </div>
 
@@ -157,36 +459,93 @@ const hints=[
 const imgMap={1:"1__Рождение.png",2:"2__Иллюзия.png",3:"3__Гнев.png",4:"4__Жадность.png",5:"5__Физический__план.png",6:"6__Заблуждение.png",7:"7__Тщеславие.png",8:"8__Скупость.png",9:"9__Чувственный__план.png",10:"10__Очищение.png",11:"11__Отвлечения.png",12:"12__Зависть.png",13:"13__Самообесценивание.png",14:"14__Ожидания.png",15:"15__Фантазия.png",16:"16__Ревность.png",17:"17__Сострадание.png",18:"18__Радость.png",19:"19__Карма.png",20:"20__Даяние.png",21:"21__Исправление.png",22:"22__Верный__путь.png",23:"23__Успех.png",24:"24__Плохая_компания.png",25:"25__Хорошая_компания.png",26:"26__Утрата.png",27:"27__Служение.png",28:"28__Опора.png",29:"29__Не_в_согласии_с_собой.png",30:"30__Хорошие_привычки.png",31:"31__Чистота.png",32:"32__Равновесие.png",33:"33__Притяжение.png",34:"34__Выбор.png",35:"35__Урок.png",36:"36__Ясность.png",37:"37__Знание.png",38:"38__Энергия_вверх.png",39:"39__Отпускание.png",40:"40__Интеграция.png",41:"41__Человеческий__план.png",42:"42__Трансформация.png",43:"43__Взросление.png",44:"44__Неведение.png",45:"45__Правильное_знание.png",46:"46__Различение.png",47:"47__Нейтральность.png",48:"48__Солнечный__план.png",49:"49__Лунный__план.png",50:"50__Аскетизм.png",51:"51__Земля.png",52:"52__Насилие.png",53:"53__Жидкости.png",54:"54__Преданность.png",55:"55__Эгоизм.png",56:"56__Главное_намерение.png",57:"57__Суета_мыслей.png",58:"58__Сияние.png",59:"59__Реальность.png",60:"60__Позитивный__интеллект.png",61:"61__Внутренний__критик.png",62:"62__Счастье.png",63:"63__Инерция.png",64:"64__Природа.png",65:"65__Внутреннее_пространство.png",66:"66__Блаженство.png",67:"67__Космическое_благо.png",68:"68__Космическое_сознание.png",69:"69__Абсолют.png",70:"70__Гармония.png",71:"71__Действие.png",72:"72__Восстановление.png"};
 
 let last=-1;
+const prefersReduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+function scrollTop(){window.scrollTo({top:0,behavior:prefersReduced?'auto':'smooth'});}
 
-function showCard(){
+function show(fromId,toId){
+  document.getElementById(fromId).classList.remove('on');
+  document.getElementById(toId).classList.add('on');
+  scrollTop();
+}
+
+function goToRitual(){ show('s0','sR'); }
+function backToStart(){ show('sR','s0'); }
+function goToOffer(){ show('s1','s2'); }
+
+function drawCard(){
+  // выбор карты (без немедленного повтора)
   let idx;
   do{idx=Math.floor(Math.random()*72);}while(idx===last&&72>1);
   last=idx;
   const h=hints[idx];
 
-  document.getElementById('card-num').textContent='Клетка '+h.n+' из 72';
-  document.getElementById('card-name').textContent=h.name;
-  document.getElementById('card-text').textContent=h.text;
+  // переход на экран карты в состоянии «вытягивания»
+  const s1=document.getElementById('s1');
+  document.getElementById('sR').classList.remove('on');
+  s1.classList.remove('revealed');
+  s1.classList.add('drawing','on');
+  scrollTop();
 
-  const img=document.getElementById('card-img');
-  if(imgMap[h.n]){
-    img.src=imgMap[h.n];
-    img.alt=h.name;
-    img.style.display='block';
-  } else {
-    img.style.display='none';
+  // через паузу-предвкушение — показываем результат (короче при reduced-motion)
+  setTimeout(function(){
+    document.getElementById('card-num').textContent='Клетка '+h.n+' из 72';
+    document.getElementById('card-name').textContent=h.name;
+    document.getElementById('card-text').textContent=h.text;
+    document.getElementById('bridge-name').textContent=h.name;
+
+    const img=document.getElementById('card-img');
+    if(imgMap[h.n]){
+      img.src=imgMap[h.n];
+      img.alt=h.name;
+      img.style.display='block';
+    } else {
+      img.style.display='none';
+    }
+
+    s1.classList.remove('drawing');
+    s1.classList.add('revealed');
+  },prefersReduced?300:950);
+}
+
+// U6: честный обратный отсчёт к 4 июля 2026, 12:00 Мск — показываем ТОЛЬКО когда до встречи ≤7 дней (research: таймер раньше срабатывает против срочности; без фейкового дефицита)
+(function(){
+  const EVENT=new Date('2026-07-04T12:00:00+03:00').getTime();
+  const el=document.getElementById('countdown');
+  if(!el) return;
+  function plural(n,one,few,many){const m=n%10,d=n%100;if(m===1&&d!==11)return n+' '+one;if(m>=2&&m<=4&&(d<10||d>=20))return n+' '+few;return n+' '+many;}
+  function tick(){
+    const diff=EVENT-Date.now(), WEEK=7*24*3600*1000;
+    if(diff>0&&diff<=WEEK){
+      const days=Math.floor(diff/86400000), hours=Math.floor((diff%86400000)/3600000);
+      el.textContent='До встречи осталось: '+plural(days,'день','дня','дней')+' '+plural(hours,'час','часа','часов');
+      el.style.display='block';
+    } else { el.style.display='none'; }
   }
+  tick(); setInterval(tick,60000);
+})();
 
-  document.getElementById('s0').classList.remove('on');
-  document.getElementById('s1').classList.add('on');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function showStart(){
-  document.getElementById('s1').classList.remove('on');
-  document.getElementById('s0').classList.add('on');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
+// Карусель отзывов: точки-индикаторы, клик по точке = скролл к слайду, активная точка по позиции скролла
+(function(){
+  const track=document.getElementById('reviewsTrack'), dotsBox=document.getElementById('reviewsDots');
+  if(!track||!dotsBox) return;
+  const slides=track.children;
+  function step(){return track.clientWidth+12;} // ширина слайда (100%) + gap
+  for(let i=0;i<slides.length;i++){
+    const b=document.createElement('button');
+    b.setAttribute('aria-label','Отзыв '+(i+1));
+    if(i===0) b.className='active';
+    b.addEventListener('click',function(){track.scrollTo({left:i*step(),behavior:prefersReduced?'auto':'smooth'});});
+    dotsBox.appendChild(b);
+  }
+  let raf;
+  track.addEventListener('scroll',function(){
+    cancelAnimationFrame(raf);
+    raf=requestAnimationFrame(function(){
+      const idx=Math.round(track.scrollLeft/step()), btns=dotsBox.children;
+      for(let i=0;i<btns.length;i++) btns[i].classList.toggle('active',i===idx);
+    });
+  });
+})();
 </script>
 </body>
 </html>
